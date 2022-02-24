@@ -1,46 +1,55 @@
 #include "stm32f407xx.h"
 #include "Board_LED.h"
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "M:\Year 2\Design construction and test\Lab 3\PB_LCD_Drivers.c"
 #include "M:\Year 2\Design construction and test\Lab 3\PB_LCD_Drivers.h"
 
-uint32_t VDD = 0;
-
-
-//theoretically sets pin of 5V and inverts equation
-uint32_t  LCD_VDD (uint32_t a) {
-	uint32_t static b;
-	b = (1.5 / a) - 15;
-	return(b);
-}
-
-//Creating a data register for the ADC
-uint32_t dataReg;
-
-void ADC_IRQ (void)
+void ADC_config()
 {
-		dataReg = ADC1->DR;
-}
-
-uint32_t ADC_config () {
-	RCC ->APB1ENR |= RCC_APB1ENR_TIM6EN; //enables clock 
-	 RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; //enables GPIO clock
-	GPIOA->MODER = (GPIOA->MODER & ~GPIO_MODER_MODER1_Msk) | 
-	(0x01 << GPIO_MODER_MODER1_Pos);
+	// RCC ->APB1ENR |= RCC_APB1ENR_TIM6EN; //enables clock up only 
+	// RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; //enables GPIO clock
+	//setting GPIO to read the analouge signal
+	// RCC ->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
 	
+	// Sets mode register 14 to analog mode
+	GPIOC->MODER = (GPIOC->MODER & ~GPIO_MODER_MODER14_Msk) | (0x01 << GPIO_MODER_MODER14_Pos); 
+	
+	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable ADC preipheral clock
+	ADC1->CR2 |= ADC_CR2_ADON; // Enable ADC
+	ADC1->CR1 |= ADC_CR1_DISCEN; // Set ADC to discontinuous mode
+	ADC1->CR2 |= ADC_CR2_EOCS; // Enable end-of-conversion flag
 }
 
-//Make Voltage into float 
-uint32_t ADCValue;
+volatile uint32_t ADCconv;
 
-
-int main (void) {
-	while(1) {
-		SystemCoreClockUpdate();
-		//ADC using the first eqatuib rearranged
-    ADCValue = (ADCValue/1.5)-15;
+int main(void)
+{
+	SystemCoreClockUpdate();
+	SysTick_Config(SystemCoreClock/2);
+	
+	// Initialise LCD
+	PB_LCD_Init();
+	PB_LCD_Clear();
+	
+	// Initialise ADC
+	ADC_config();
+	
+	// Main loop
+	while(1)
+	{
+		// Begin a conversion with the ADC
+		ADC1->CR2 |= ADC_CR2_SWSTART;
 		
-	}	
+		// Wait until the conversion is complete
+		while (!(ADC1->CR2 & ADC_SR_EOC));
+		
+		// Store the voltage in a local variable
+		ADCconv = ADC1->DR;
+		
+		char str[10];
+		sprintf(str, "%u", ADCconv);
+		
+		PB_LCD_WriteString(str, 10);
+	}
 }
