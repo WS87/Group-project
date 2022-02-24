@@ -5,7 +5,7 @@
 #include "M:\Year 2\Design construction and test\Lab 3\PB_LCD_Drivers.c"
 #include "M:\Year 2\Design construction and test\Lab 3\PB_LCD_Drivers.h"
 
-void ADC_config()
+void VoltmeterConfig()
 {
 	// RCC ->APB1ENR |= RCC_APB1ENR_TIM6EN; //enables clock up only 
 	// RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN; //enables GPIO clock
@@ -13,7 +13,7 @@ void ADC_config()
 	// RCC ->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
 	
 	// Sets mode register 14 to analog mode
-	GPIOC->MODER = (GPIOC->MODER & ~GPIO_MODER_MODER14_Msk) | (0x01 << GPIO_MODER_MODER14_Pos); 
+	GPIOC->MODER = (GPIOC->MODER & ~GPIO_MODER_MODER14) | (0x01 << GPIO_MODER_MODER14_Pos); 
 	
 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable ADC preipheral clock
 	ADC1->CR2 |= ADC_CR2_ADON; // Enable ADC
@@ -22,6 +22,7 @@ void ADC_config()
 }
 
 volatile uint32_t ADCconv;
+char ADCconvString[10];
 
 int main(void)
 {
@@ -33,7 +34,7 @@ int main(void)
 	PB_LCD_Clear();
 	
 	// Initialise ADC
-	ADC_config();
+	VoltmeterConfig();
 	
 	// Main loop
 	while(1)
@@ -47,9 +48,8 @@ int main(void)
 		// Store the voltage in a local variable
 		ADCconv = ADC1->DR;
 		
-		char str[10];
-		sprintf(str, "%u", ADCconv);
-		
-		PB_LCD_WriteString(str, 10);
+		// Store ADCconv value as a string in ADCconvString
+		sprintf(ADCconvString, "%u", ADCconv);
+		PB_LCD_WriteString(ADCconvString, 10);
 	}
 }
