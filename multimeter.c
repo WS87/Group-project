@@ -3,6 +3,7 @@
 #include "M:\Design, Construction & Test\WORKING ADC\PB_LCD_Drivers.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 // Begin interrupt stuff
 static volatile uint32_t ticks = 0;
@@ -20,14 +21,14 @@ void waitForATime(uint32_t howLongToWait)
 
 int convertADCValue(uint16_t value)
 {
-	// Added typecasts, check if this solves the displaying 0 issue. 
+	// Added typecasts, check if this solves the displaying 0 issue
 	value = (int) ( (float) value / 4096) * 3;
 	return value;
 }
 
 double convertADCValue2(uint32_t value) 
 {
-	// Added typecasts, check if this solves the displaying 0 issue. 
+	// Added typecasts, check if this solves the displaying 0 issue
 	double con = 0;
 	con = ( (float) value / 4096) * 3.33;
 	return con;
@@ -43,7 +44,7 @@ void AdcConfig(void)
 	GPIOC->MODER = (GPIOC->MODER & ~GPIO_MODER_MODER4_Msk) | (0x3 << GPIO_MODER_MODER4_Pos);
 	// Set ADC to discontinuous mode
 	ADC1->CR1 = (ADC1->CR1 & ~ADC_CR1_DISCEN_Msk) | (0x1 << ADC_CR1_DISCEN_Pos);
-	// Sets end of conversion flag mode?
+	// Sets end of conversion flag mode
 	ADC1->CR2 = (ADC1->CR2 & ~ADC_CR2_EOCS_Msk) | (0x1 << ADC_CR2_EOCS_Pos);
 	// Set ADC to perform one conversion before raising EOC flag
 	ADC1->SQR1 = (ADC1->SQR1 & ~ADC_SQR1_L_Msk) | (0x0 << ADC_SQR1_L_Pos);
@@ -58,7 +59,7 @@ int main(void)
 	// Initialise board
 	SystemCoreClockUpdate();
 	SysTick_Config(SystemCoreClock / 2);
-	
+
 	// Initialise LCD
 	PB_LCD_Init();
 	PB_LCD_Clear();	
@@ -67,23 +68,22 @@ int main(void)
 	AdcConfig();
 
 	// Declare internal variables to store readings
-	int voltageDCMode = 1;
 	uint32_t AdcValue;
 	double AdcFinal;
 
-	while(voltageDCMode == 1)
+	while (true)
 	{
-		int finished = 0;
-		// starts conversion of 'standard' channels.
+		bool finished = false;
+		// starts conversion of 'standard' channels
 		ADC1->CR2 = (ADC1->CR2 & ~ADC_CR2_SWSTART_Msk) | (0x1 << ADC_CR2_SWSTART_Pos);
-		while (finished == 0)
+		while (!finished)
 		{
 			// Checks if end of conversion flag has been set
 			if ((ADC1->SR & ADC_SR_EOC_Msk) == ADC_SR_EOC_Msk) 
 			{
 				// Retrieve converted value from data register
 				AdcValue = ADC1->DR;
-				// Converts from internal numerical value to actual value. 
+				// Converts from internal numerical value to actual value
 				AdcFinal = convertADCValue2(AdcValue);
 
 				// Wait 1 second between readings
@@ -103,7 +103,7 @@ int main(void)
 				PB_LCD_WriteString(FinalText, (int) strlen(FinalText));
 
 				// Mark conversion as finished
-				finished = 1;
+				finished = true;
 			}	
 		}
 	}
