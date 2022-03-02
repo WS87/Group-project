@@ -89,13 +89,19 @@ int main(void)
 				// Wait 1 second between readings
 				waitForATime(1);
 
-				// Logic to write reading to LCD
+				// Create a readable string to display on LCD
 				PB_LCD_Clear();
-				char string[8];
-				strcpy(string, "00000000");
-				snprintf(string, 8, "%0.3f", AdcFinal);
-				PB_LCD_WriteString(string, 8);
-				
+				char VoltageValue[8];
+				strcpy(VoltageValue, "00000000");
+				snprintf(VoltageValue, 8, "%0.3f", AdcFinal);
+
+				// Try out adding "Voltage: " to the start
+				char FinalText[16] = "Voltage: ";
+				strcat(FinalText, VoltageValue);
+
+				// Write to LCD
+				PB_LCD_WriteString(FinalText, (int) strlen(FinalText));
+
 				// Mark conversion as finished
 				finished = 1;
 			}	
