@@ -1,6 +1,6 @@
 #include "multimeter.h"
 #include "Board_LED.h"
-#include "M:\Design, Construction & Test\WORKING ADC\PB_LCD_Drivers.h"
+#include "M:\Year 2\Design construction and test\Group-project-main\PB_LCD_Drivers.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -21,17 +21,17 @@ void waitForATime(uint32_t howLongToWait)
 
 int convertADCValue(uint16_t value)
 {
-	// Added typecasts, check if this solves the displaying 0 issue
+	// configures clock
 	value = (int) ( (float) value / 4096) * 3;
 	return value;
 }
 
 double convertADCValue2(uint32_t value) 
 {
-	// Added typecasts, check if this solves the displaying 0 issue
-	double con = 0;
-	con = ( (float) value / 4096) * 3.33;
-	return con;
+	// configures clock
+	double Val2 = 0;
+	Val2 = ( (float) value / 4096) * 3.33;
+	return Val2;
 }
 
 void AdcConfig(void)
