@@ -1,6 +1,6 @@
 #include "multimeter.h"
 #include "Board_LED.h"
-#include "M:\Year 2\Design construction and test\Group-project-main\PB_LCD_Drivers.h"
+#include "M:\Design, Construction & Test\WORKING ADC\PB_LCD_Drivers.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -21,17 +21,17 @@ void waitForATime(uint32_t howLongToWait)
 
 int convertADCValue(uint16_t value)
 {
-	// configures clock
-	value = (int) ( (float) value / 4096) * 3;
+	// Added typecasts, check if this solves the displaying 0 issue
+	value = (int) ((float) value / 4096) * 3;
 	return value;
 }
 
 double convertADCValue2(uint32_t value) 
 {
-	// configures clock
-	double Val2 = 0;
-	Val2 = ( (float) value / 4096) * 3.33;
-	return Val2;
+	// Added typecasts, check if this solves the displaying 0 issue
+	double con = 0;
+	con = ((float) value / 4096) * 3.33;
+	return con;
 }
 
 void AdcConfig(void)
@@ -49,9 +49,21 @@ void AdcConfig(void)
 	// Set ADC to perform one conversion before raising EOC flag
 	ADC1->SQR1 = (ADC1->SQR1 & ~ADC_SQR1_L_Msk) | (0x0 << ADC_SQR1_L_Pos);
 	// Set ADC to read input 14
-	ADC1->SQR3 = (ADC1->SQR3 & ~ADC_SQR3_SQ1_Msk) | (0xE<< ADC_SQR3_SQ1_Pos);
+	ADC1->SQR3 = (ADC1->SQR3 & ~ADC_SQR3_SQ1_Msk) | (0xE << ADC_SQR3_SQ1_Pos);
 	// Enable ADC :D
 	ADC1->CR2 = (ADC1->CR2 & ~ADC_CR2_ADON_Msk) | (0x1 << ADC_CR2_ADON_Pos);
+}
+
+void DacConfig(void)
+{
+	// Enable GPIO-A clock
+	RCC->AHB1ENR = (RCC->AHB1ENR & ~RCC_AHB1ENR_GPIOAEN_Msk) | (0x1 << RCC_AHB1ENR_GPIOAEN_Pos);
+	// Enable DAC1 clock
+	RCC->APB1ENR = (RCC->APB1ENR & ~RCC_APB1ENR_DACEN_Msk) | (0x1 << RCC_APB1ENR_DACEN_Pos);
+	// Sets mode register 14 to analog mode
+	GPIOA->MODER = (GPIOA->MODER & ~GPIO_MODER_MODER4_Msk) | (0x3 << GPIO_MODER_MODER4_Pos);
+	// Enable channel one of the DAC
+	DAC1->CR = (DAC->CR & ~DAC_CR_EN1_Msk) | (0x0 << DAC_CR_EN1_Msk);
 }
 
 int main(void)
@@ -66,6 +78,7 @@ int main(void)
 
 	// Initialise ADC
 	AdcConfig();
+	DacConfig();
 
 	// Declare internal variables to store readings
 	uint32_t AdcValue;
@@ -83,6 +96,10 @@ int main(void)
 			{
 				// Retrieve converted value from data register
 				AdcValue = ADC1->DR;
+				
+				// NEEDS TO BE FINISHED (SET THE REGISTER TO THE VALUE OF "AdcValue")
+				DAC1->DHR12R1 = (DAC1->DHR12R1 & DAC_DHR12R1_DACC1DHR_Msk) | (0xF << DAC_DHR12R1_DACC1DHR_Pos);
+				
 				// Converts from internal numerical value to actual value
 				AdcFinal = convertADCValue2(AdcValue);
 
