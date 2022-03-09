@@ -63,7 +63,7 @@ void DacConfig(void)
 	// Sets mode register 14 to analog mode
 	GPIOA->MODER = (GPIOA->MODER & ~GPIO_MODER_MODER4_Msk) | (0x3 << GPIO_MODER_MODER4_Pos);
 	// Enable channel one of the DAC
-	DAC1->CR = (DAC->CR & ~DAC_CR_EN1_Msk) | (0x0 << DAC_CR_EN1_Msk);
+	DAC1->CR = (DAC->CR & ~DAC_CR_EN1_Msk) | (0x1 << DAC_CR_EN1_Pos);
 }
 
 int main(void)
@@ -84,6 +84,9 @@ int main(void)
 	uint32_t AdcValue;
 	double AdcFinal;
 
+	// Write the value of the ADC to the DAC
+	DAC1->DHR12R1 = (DAC1->DHR12R1 & ~DAC_DHR12R1_DACC1DHR_Msk) | (/* 1 volt */ 0x3E8 << DAC_DHR12R1_DACC1DHR_Pos);
+
 	while (true)
 	{
 		bool finished = false;
@@ -96,9 +99,6 @@ int main(void)
 			{
 				// Retrieve converted value from data register
 				AdcValue = ADC1->DR;
-				
-				// NEEDS TO BE FINISHED (SET THE REGISTER TO THE VALUE OF "AdcValue")
-				DAC1->DHR12R1 = (DAC1->DHR12R1 & DAC_DHR12R1_DACC1DHR_Msk) | (0xF << DAC_DHR12R1_DACC1DHR_Pos);
 				
 				// Converts from internal numerical value to actual value
 				AdcFinal = convertADCValue2(AdcValue);
