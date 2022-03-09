@@ -7,3 +7,4 @@ int convertADCValue(uint16_t value);
 double convertADCValue2(uint32_t value);
 
 void AdcConfig(void);
+void DacConfig(void);
