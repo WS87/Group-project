@@ -1,0 +1,54 @@
+#include "stm32f407xx.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "Board_LED.h"
+#include "PB_LCD_Drivers.h"
+
+uint32_t static n = 0;
+
+
+
+uint32_t volatile ticks = 0;
+
+void SysTick_Handler (void) {
+	ticks++;
+} 
+
+
+void waitForATime (int howLongToWait) {
+	uint32_t whenStarted = ticks;
+	while (ticks - whenStarted < howLongToWait);
+}
+
+
+int main (void) {
+	
+	RCC->CR |= RCC_CR_HSEON; 			//External 8MHz clock
+	while(!(RCC->CR & RCC_CR_HSERDY)){} 
+	RCC->CFGR &= ~RCC_CFGR_SW_Msk; 
+	RCC->CFGR |= RCC_CFGR_SW_HSE; 
+	
+	SystemCoreClockUpdate();
+	SysTick_Config(SystemCoreClock/100);
+	PB_LCD_Init();
+	PB_LCD_Clear();
+		
+	
+	
+	while(1){
+		waitForATime(1);
+		n = n + 1;									//n = 10ms
+		
+		
+		
+		char sec[10];								//LCD Printing
+		sprintf(sec, "%d", n);
+		PB_LCD_GoToXY(0, 1);
+		PB_LCD_WriteString(sec, 10);
+		
+		
+		
+	}
+	
+}
